@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<style>
+
+/* General styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* Button styles */
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 15px 25px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 300px;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+#stopButton {
+    background-color: #dc3545;
+}
+
+#endButton {
+    background-color: #6c757d;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+}
+
+#resetButton {
+    display: none;
+    background-color: #28a745;
+}
+
+#instructionButton {
+    background-color: #17a2b8;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 10px 15px;
+    font-size: 16px;
+    
+}
+
+/* Timer and alert styles */
+#timer, #startAlert, #stopCountContainer, #lastTimeContainer, #summaryContainer {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+#timer.break {
+    width: 90%;
+    font-size: 1.5em;
+    padding: 30px;
+    background-color: #ffd700;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+#stopCountContainer, #lastTimeContainer, #summaryContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#summaryContainer {
+    display: none;
+}
+
+#startAlert {
+    display: none;
+    font-size: 2em;
+    color: #fff;
+    background-color: #28a745;
+    padding: 15px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: fadeInOut 1s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+/* Instruction popup styles */
+#instructionPopup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+#instructionContent {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+#instructionContent h2 {
+    margin-top: 0;
+}
+
+#closeInstructionButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+#closeInstructionButton:hover {
+    opacity: 0.9;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    button {
+        padding: 10px 15px;
+        font-size: 16px;
+        margin: 5px;
+    }
+
+    #instructionButton, #endButton {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    #instructionContent {
+        width: 95%;
+    }
+
+    #timer, #startAlert, #stopCountContainer, #lastTimeContainer, #summaryContainer {
+        padding: 15px;
+    }
+}
+
+
+</style>
+<body>
+    <button id="instructionButton">Instructions</button>
+    <div id="instructionPopup">
+        <div id="instructionContent">
+            <h2>How to Use This Timer</h2>
+            <p>This timer helps you track time with intervals and breaks. Here’s how it works:</p>
+            <ul>
+                <li>Press "Start Timer" to begin the first interval.</li>
+                <li>Press "Stop Timer" to pause.</li>
+                <li>Press "End" to finish and view your stats.</li>
+                <li>Press "Reset" to start over.</li>
+            </ul>
+            <button id="closeInstructionButton">Close</button>
+        </div>
+    </div>
+    
+    <div id="mainContent">
+        <button id="startButton">Start Timer</button>
+        <button id="stopButton" style="display:none;">Stop Timer</button>
+        <button id="endButton">End</button>
+        <button id="resetButton">Reset</button>
+        <div id="timer"></div>
+        <div id="startAlert">Start</div>
+        <div id="stopCountContainer">Done laps: <span id="stopCount">0</span></div>
+        <div id="lastTimeContainer">Finale lap Time: <span id="lastTime">00:00</span></div>
+    
+        <div id="summaryContainer">
+            <div>Total laps: <span id="totalStopCount">0</span></div>
+            <div>Total laps Time: <span id="totalElapsedTime">00:00</span></div>
+            <div>Lap Times: <ul id="lapTimes"></ul></div>
+        </div>
+    </div>
+
+    <script>
+
+let minuteTimer;
+let infiniteTimer;
+let isCounting = false;
+let stopCount = 0;
+let lastCountTime = 0;
+let totalElapsedTime = 0;
+let lapTimes = []; // Array to store lap times
+
+document.getElementById('startButton').addEventListener('click', function() {
+    if (isCounting) return;
+    isCounting = true;
+    document.getElementById('startButton').style.display = 'none';
+    setTimeout(() => startMinuteTimer(60), 1000); // Wait 1 second before starting the first minute timer
+});
+
+document.getElementById('stopButton').addEventListener('click', function() {
+    clearInterval(infiniteTimer);
+    document.getElementById('stopButton').style.display = 'none';
+    document.getElementById('timer').innerText = '';
+    stopCount++;
+    lastCountTime += 60; // Add 60 seconds (1 minute)
+    totalElapsedTime += lastCountTime;
+    lapTimes.push(lastCountTime); // Store the lap time
+    document.getElementById('stopCount').innerText = stopCount;
+    document.getElementById('lastTime').innerText = formatTime(lastCountTime);
+    lastCountTime = 0;
+    isCounting = false;
+    setTimeout(() => startBreakTimer(30, () => {
+        showStartAlert();
+        setTimeout(() => startMinuteTimer(60), 1000);
+    }), 1000); // Wait 1 second before each new timer
+});
+
+document.getElementById('endButton').addEventListener('click', function() {
+    clearInterval(infiniteTimer);
+    clearInterval(minuteTimer);
+    document.getElementById('timer').style.display = 'none';
+    document.getElementById('stopCountContainer').style.display = 'none';
+    document.getElementById('lastTimeContainer').style.display = 'none';
+    document.getElementById('startButton').style.display = 'none';
+    document.getElementById('endButton').style.display = 'none';
+    document.getElementById('resetButton').style.display = 'block';
+
+    document.getElementById('totalStopCount').innerText = stopCount;
+    document.getElementById('totalElapsedTime').innerText = formatTime(totalElapsedTime);
+    document.getElementById('summaryContainer').style.display = 'block';
+
+    // Display the lap times
+    const lapTimesList = document.getElementById('lapTimes');
+    lapTimesList.innerHTML = ''; // Clear the list
+    lapTimes.forEach((time, index) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `Lap ${index + 1}: ${formatTime(time)}`;
+        lapTimesList.appendChild(listItem);
+    });
+});
+
+document.getElementById('resetButton').addEventListener('click', function() {
+    // Reset all values
+    stopCount = 0;
+    lastCountTime = 0;
+    totalElapsedTime = 0;
+    lapTimes = []; // Reset lap times
+    isCounting = false;
+
+    // Redisplay elements
+    document.getElementById('startButton').style.display = 'block';
+    document.getElementById('endButton').style.display = 'block';
+    document.getElementById('stopCountContainer').style.display = 'flex';
+    document.getElementById('lastTimeContainer').style.display = 'flex';
+    document.getElementById('resetButton').style.display = 'none';
+    document.getElementById('summaryContainer').style.display = 'none';
+
+    // Reset text
+    document.getElementById('stopCount').innerText = '0';
+    document.getElementById('lastTime').innerText = '00:00';
+    document.getElementById('timer').innerText = '';
+    document.getElementById('startAlert').style.display = 'none';
+
+    // Reinitialize timers
+    minuteTimer = null;
+    infiniteTimer = null;
+});
+
+/* Instruction Popup Functionality */
+const instructionButton = document.getElementById('instructionButton');
+const instructionPopup = document.getElementById('instructionPopup');
+const closeInstructionButton = document.getElementById('closeInstructionButton');
+
+instructionButton.addEventListener('click', function() {
+    instructionPopup.style.display = 'flex';
+});
+
+closeInstructionButton.addEventListener('click', function() {
+    instructionPopup.style.display = 'none';
+});
+
+instructionPopup.addEventListener('click', function(event) {
+    if (event.target === instructionPopup) {
+        instructionPopup.style.display = 'none';
+    }
+});
+
+function startMinuteTimer(seconds, callback) {
+    let timeLeft = seconds;
+    minuteTimer = setInterval(function() {
+        document.body.style.backgroundColor = ""; // Reset background color
+
+        if (timeLeft <= 3 && timeLeft > 2) {
+            document.body.style.backgroundColor = "red"; // 3 seconds left
+        } else if (timeLeft <= 2 && timeLeft > 1) {
+            document.body.style.backgroundColor = "yellow"; // 2 seconds left
+        } else if (timeLeft <= 1 && timeLeft > 0) {
+            document.body.style.backgroundColor = "green"; // 1 second left
+        }
+
+        document.getElementById('timer').innerText = timeLeft + ' seconds remaining';
+        timeLeft--;
+
+        if (timeLeft < 0) {
+            clearInterval(minuteTimer);
+            document.body.style.backgroundColor = "green"; // When timer ends
+            if (callback) {
+                callback();
+            } else {
+                setTimeout(startInfiniteTimer, 1000); // Wait 1 second before starting the infinite timer
+            }
+        }
+    }, 1000);
+}
+
+function startBreakTimer(seconds, callback) {
+    let timeLeft = seconds;
+    document.getElementById('timer').classList.add('break');
+    document.getElementById('timer').innerText = 'Break';
+    setTimeout(() => {
+        minuteTimer = setInterval(function() {
+            document.body.style.backgroundColor = ""; // Reset background color
+
+            if (timeLeft <= 3 && timeLeft > 2) {
+                document.body.style.backgroundColor = "red"; // 3 seconds left
+            } else if (timeLeft <= 2 && timeLeft > 1) {
+                document.body.style.backgroundColor = "yellow"; // 2 seconds left
+            } else if (timeLeft <= 1 && timeLeft > 0) {
+                document.body.style.backgroundColor = "green"; // 1 second left
+            }
+
+            document.getElementById('timer').innerText = 'Break: ' + timeLeft + ' seconds remaining';
+            timeLeft--;
+
+            if (timeLeft < 0) {
+                clearInterval(minuteTimer);
+                document.body.style.backgroundColor = "green"; // When timer ends
+                document.getElementById('timer').classList.remove('break');
+                showStartAlert(); // Show "Start" alert
+                if (callback) {
+                    setTimeout(callback, 1000); // Wait 1 second before starting the new timer
+                }
+            }
+        }, 1000);
+    }, 1000); // Wait 1 second before starting the countdown
+}
+
+function showStartAlert() {
+    const startAlert = document.getElementById('startAlert');
+    startAlert.style.display = 'block';
+    setTimeout(() => {
+        startAlert.style.display = 'none';
+    }, 1000);
+}
+
+function startInfiniteTimer() {
+    let count = 0;
+    document.getElementById('stopButton').style.display = 'block';
+    infiniteTimer = setInterval(function() {
+        document.getElementById('timer').innerText = 'squade pushup pullup: ' + count++;
+        lastCountTime = count;
+    }, 1000);
+}
+
+function formatTime(seconds) {
+    let minutes = Math.floor(seconds / 60);
+    let remainingSeconds = seconds % 60;
+    return (minutes < 10 ? '0' : '') + minutes + ':' + (remainingSeconds < 10 ? '0' : '') + remainingSeconds;
+}
+
+
+
+    </script>
+</body>
+</html>
